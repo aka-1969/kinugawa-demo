@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>フロント管理ダッシュボード｜鬼怒川パークホテルズ</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Noto+Sans+JP:wght@300;400;500&display=swap');
+
+:root {
+  --gold: #c9a84c;
+  --gold-dim: rgba(201,168,76,0.1);
+  --gold-border: rgba(201,168,76,0.28);
+  --bg: #0b1118;
+  --surface: rgba(255,255,255,0.04);
+  --border: rgba(255,255,255,0.08);
+  --text: #e0d8c8;
+  --text-dim: #7a7060;
+  --green: #4a9c6e;
+  --red: #c05050;
+  --amber: #c08030;
+  --blue: #4a7eb5;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at 10% 10%, rgba(201,168,76,0.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* Layout */
+.layout { display: flex; min-height: 100vh; }
+
+/* Sidebar */
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.02);
+  border-right: 1px solid var(--border);
+  padding: 28px 0;
+  display: flex;
+  flex-direction: column;
+}
+.sidebar-logo {
+  padding: 0 20px 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+.sidebar-logo-en {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+.sidebar-logo-ja {
+  font-size: 13px;
+  color: #d0c8b8;
+  letter-spacing: 1px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  font-size: 12px;
+  color: var(--text-dim);
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: all 0.2s;
+  letter-spacing: 1px;
+}
+.nav-item.active {
+  color: var(--gold);
+  border-left-color: var(--gold);
+  background: var(--gold-dim);
+}
+.nav-icon { font-size: 14px; }
+.sidebar-bottom {
+  margin-top: auto;
+  padding: 20px;
+  border-top: 1px solid var(--border);
+}
+.staff-badge {
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+.staff-name {
+  font-size: 13px;
+  color: var(--text);
+  margin-top: 4px;
+}
+
+/* Main */
+.main { flex: 1; overflow-x: hidden; }
+
+/* Top bar */
+.topbar {
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255,255,255,0.02);
+}
+.topbar-title {
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: #d0c8b8;
+}
+.topbar-date {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-size: 11px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  font-family: 'Noto Sans JP', sans-serif;
+  transition: all 0.2s;
+}
+.refresh-btn:hover { border-color: var(--gold-border); color: var(--gold); }
+
+/* Content */
+.content { padding: 28px 32px; }
+
+/* KPI cards */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+}
+.kpi-card.gold::after { background: linear-gradient(90deg, var(--gold), transparent); }
+.kpi-card.green::after { background: linear-gradient(90deg, var(--green), transparent); }
+.kpi-card.red::after { background: linear-gradient(90deg, var(--red), transparent); }
+.kpi-card.blue::after { background: linear-gradient(90deg, var(--blue), transparent); }
+
+.kpi-label {
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+.kpi-value {
+  font-size: 32px;
+  font-weight: 300;
+  color: #f0e8d8;
+  margin-bottom: 4px;
+  font-family: 'Cormorant Garamond', serif;
+}
+.kpi-sub { font-size: 11px; color: var(--text-dim); }
+
+/* Alert banner */
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: rgba(192,80,80,0.1);
+  border: 1px solid rgba(192,80,80,0.3);
+  border-radius: 8px;
+  margin-bottom: 24px;
+  font-size: 13px;
+}
+.alert-icon { font-size: 18px; }
+.alert-text { flex: 1; }
+.alert-text strong { color: #e07070; }
+
+/* Section header */
+.sec-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.sec-title {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sec-title::before {
+  content: '';
+  width: 3px;
+  height: 12px;
+  background: var(--gold);
+  border-radius: 2px;
+}
+.filter-tabs {
+  display: flex;
+  gap: 6px;
+}
+.filter-tab {
+  padding: 6px 14px;
+  font-size: 11px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+.filter-tab.active {
+  background: var(--gold-dim);
+  border-color: var(--gold-border);
+  color: var(--gold);
+}
+
+/* Table */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+  font-weight: 400;
+  background: rgba(255,255,255,0.02);
+}
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+  cursor: pointer;
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: rgba(255,255,255,0.03); }
+tbody tr.highlight { background: rgba(192,80,80,0.07); }
+td {
+  padding: 14px 16px;
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  font-weight: 500;
+  gap: 4px;
+}
+.badge-red { background: rgba(192,80,80,0.15); color: #e07070; border: 1px solid rgba(192,80,80,0.3); }
+.badge-amber { background: rgba(192,128,48,0.15); color: #e09040; border: 1px solid rgba(192,128,48,0.3); }
+.badge-green { background: rgba(74,156,110,0.15); color: #6acc96; border: 1px solid rgba(74,156,110,0.3); }
+.badge-blue { background: rgba(74,126,181,0.15); color: #7aaad4; border: 1px solid rgba(74,126,181,0.3); }
+.badge-dim { background: var(--surface); color: var(--text-dim); border: 1px solid var(--border); }
+
+/* Allergy pills */
+.allergy-pills { display: flex; gap: 4px; flex-wrap: wrap; }
+.pill {
+  padding: 2px 8px;
+  background: rgba(192,80,80,0.12);
+  border: 1px solid rgba(192,80,80,0.25);
+  border-radius: 20px;
+  font-size: 10px;
+  color: #e07070;
+}
+
+/* Detail panel */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.detail-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+}
+.detail-title {
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--gold);
+  margin-bottom: 16px;
+}
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  gap: 12px;
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-key { color: var(--text-dim); flex-shrink: 0; }
+.detail-val { text-align: right; }
+
+/* Action buttons */
+.actions { display: flex; gap: 8px; }
+.action-btn {
+  padding: 6px 12px;
+  border-radius: 5px;
+  font-size: 11px;
+  cursor: pointer;
+  border: 1px solid;
+  font-family: 'Noto Sans JP', sans-serif;
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+}
+.action-btn.primary {
+  background: linear-gradient(90deg, var(--gold), #e8c56a);
+  border-color: var(--gold);
+  color: #0b1118;
+  font-weight: 500;
+}
+.action-btn.secondary {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text-dim);
+}
+.action-btn.secondary:hover {
+  border-color: var(--gold-border);
+  color: var(--gold);
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  background: rgba(20,32,44,0.95);
+  border: 1px solid var(--gold-border);
+  border-radius: 8px;
+  padding: 14px 20px;
+  font-size: 12px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 100;
+  letter-spacing: 0.5px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-en">KINUGAWA PARK HOTELS</div>
+      <div class="sidebar-logo-ja">フロント管理</div>
+    </div>
+    <div class="nav-item active"><span class="nav-icon">🏨</span> チェックイン管理</div>
+    <div class="nav-item"><span class="nav-icon">🚪</span> チェックアウト</div>
+    <div class="nav-item"><span class="nav-icon">🍽</span> 食事・アレルギー</div>
+    <div class="nav-item"><span class="nav-icon">🧹</span> 清掃ステータス</div>
+    <div class="nav-item"><span class="nav-icon">📊</span> 売上レポート</div>
+    <div class="nav-item"><span class="nav-icon">💬</span> 口コミ対応</div>
+    <div class="sidebar-bottom">
+      <div class="staff-badge">LOGGED IN AS</div>
+      <div class="staff-name">フロント　田中</div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">本日のチェックイン管理</div>
+        <div class="topbar-date" style="margin-top:4px;">2026年4月10日（木）｜現在 14:38</div>
+      </div>
+      <button class="refresh-btn" onclick="showToast('最新データを取得しました')">↻　更新</button>
+    </div>
+
+    <div class="content">
+
+      <!-- KPI -->
+      <div class="kpi-row">
+        <div class="kpi-card gold">
+          <div class="kpi-label">本日チェックイン</div>
+          <div class="kpi-value">12</div>
+          <div class="kpi-sub">組（18名）</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-label">事前チェックイン完了</div>
+          <div class="kpi-value">8</div>
+          <div class="kpi-sub">組（66.7%）</div>
+        </div>
+        <div class="kpi-card red">
+          <div class="kpi-label">アレルギー対応あり</div>
+          <div class="kpi-value">3</div>
+          <div class="kpi-sub">組　要確認</div>
+        </div>
+        <div class="kpi-card blue">
+          <div class="kpi-label">本日チェックアウト</div>
+          <div class="kpi-value">9</div>
+          <div class="kpi-sub">組（完了：7組）</div>
+        </div>
+      </div>
+
+      <!-- Alert -->
+      <div class="alert">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-text">
+          <strong>アレルギー対応が必要なお客様が3組います。</strong>
+          チェックイン前に厨房へ情報共有してください。
+        </div>
+        <button class="action-btn secondary" onclick="showToast('厨房LINEグループに通知しました ✓')">厨房に通知</button>
+      </div>
+
+      <!-- Check-in table -->
+      <div class="sec-header">
+        <div class="sec-title">TODAY'S CHECK-IN　本日のチェックイン一覧</div>
+        <div class="filter-tabs">
+          <div class="filter-tab active">全て (12)</div>
+          <div class="filter-tab">未到着 (8)</div>
+          <div class="filter-tab">対応済 (4)</div>
+          <div class="filter-tab">要注意 (3)</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>客室</th>
+              <th>お名前</th>
+              <th>人数</th>
+              <th>到着予定</th>
+              <th>夕食</th>
+              <th>アレルギー</th>
+              <th>事前入力</th>
+              <th>ステータス</th>
+              <th>アクション</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="highlight">
+              <td><strong>302</strong></td>
+              <td>山田 太郎</td>
+              <td>2名</td>
+              <td>17:00頃</td>
+              <td>18:00〜</td>
+              <td>
+                <div class="allergy-pills">
+                  <span class="pill">卵</span>
+                  <span class="pill">乳製品</span>
+                </div>
+              </td>
+              <td><span class="badge badge-green">✓ 完了</span></td>
+              <td><span class="badge badge-amber">未到着</span></td>
+              <td>
+                <div class="actions">
+                  <button class="action-btn primary" onclick="showToast('302号室のチェックインを完了しました')">完了</button>
+                  <button class="action-btn secondary" onclick="showToast('詳細を表示します')">詳細</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>501</strong></td>
+              <td>佐藤 花子</td>
+              <td>3名</td>
+              <td>16:00頃</td>
+              <td>18:30〜</td>
+              <td><span style="color:var(--text-dim);font-size:11px;">なし</span></td>
+              <td><span class="badge badge-green">✓ 完了</span></td>
+              <td><span class="badge badge-blue">✓ 到着済</span></td>
+              <td>
+                <div class="actions">
+                  <button class="action-btn primary" onclick="showToast('501号室のチェックインを完了しました')">完了</button>
+                  <button class="action-btn secondary">詳細</button>
+                </div>
+              </td>
+            </tr>
+            <tr class="highlight">
+              <td><strong>215</strong></td>
+              <td>Kim Jisoo</td>
+              <td>2名</td>
+              <td>18:00頃</td>
+              <td>19:00〜</td>
+              <td>
+                <div class="allergy-pills">
+                  <span class="pill">海鮮</span>
+                </div>
+              </td>
+              <td><span class="badge badge-green">✓ 完了</span></td>
+              <td><span class="badge badge-amber">未到着</span></td>
+              <td>
+                <div class="actions">
+                  <button class="action-btn primary" onclick="showToast('215号室のチェックインを完了しました')">完了</button>
+                  <button class="action-btn secondary">詳細</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>408</strong></td>
+              <td>鈴木 一郎</td>
+              <td>4名</td>
+              <td>15:00頃</td>
+              <td>18:00〜</td>
+              <td><span style="color:var(--text-dim);font-size:11px;">なし</span></td>
+              <td><span class="badge badge-dim">未入力</span></td>
+              <td><span class="badge badge-blue">✓ 到着済</span></td>
+              <td>
+                <div class="actions">
+                  <button class="action-btn primary" onclick="showToast('408号室のチェックインを完了しました')">完了</button>
+                  <button class="action-btn secondary">詳細</button>
+                </div>
+              </td>
+            </tr>
+            <tr class="highlight">
+              <td><strong>620</strong></td>
+              <td>Li Ming</td>
+              <td>2名</td>
+              <td>19:00以降</td>
+              <td>19:30〜</td>
+              <td>
+                <div class="allergy-pills">
+                  <span class="pill">そば</span>
+                  <span class="pill">ナッツ</span>
+                </div>
+              </td>
+              <td><span class="badge badge-green">✓ 完了</span></td>
+              <td><span class="badge badge-amber">未到着</span></td>
+              <td>
+                <div class="actions">
+                  <button class="action-btn primary" onclick="showToast('620号室のチェックインを完了しました')">完了</button>
+                  <button class="action-btn secondary">詳細</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>105</strong></td>
+              <td>田村 美咲</td>
+              <td>1名</td>
+              <td>16:00頃</td>
+              <td>18:00〜</td>
+              <td><span style="color:var(--text-dim);font-size:11px;">なし</span></td>
+              <td><span class="badge badge-green">✓ 完了</span></td>
+              <td><span class="badge badge-blue">✓ 到着済</span></td>
+              <td>
+                <div class="actions">
+                  <button class="action-btn primary" onclick="showToast('105号室のチェックインを完了しました')">完了</button>
+                  <button class="action-btn secondary">詳細</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Detail cards -->
+      <div class="sec-header">
+        <div class="sec-title">AI SUMMARY　AIによる本日の自動サマリー</div>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-card">
+          <div class="detail-title">🍽　厨房向け連絡事項（自動生成）</div>
+          <div class="detail-row">
+            <div class="detail-key">アレルギー対応</div>
+            <div class="detail-val">3組・計4品目</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-key">302号室</div>
+            <div class="detail-val" style="color:#e07070;">卵・乳製品 除去</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-key">215号室</div>
+            <div class="detail-val" style="color:#e07070;">海鮮類 除去</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-key">620号室</div>
+            <div class="detail-val" style="color:#e07070;">そば・ナッツ 除去</div>
+          </div>
+          <div style="margin-top:16px;">
+            <button class="action-btn primary" style="width:100%;" onclick="showToast('厨房LINEに送信しました ✓')">
+              LINEで厨房に送信
+            </button>
+          </div>
+        </div>
+        <div class="detail-card">
+          <div class="detail-title">🧹　清掃チーム向け連絡事項（自動生成）</div>
+          <div class="detail-row">
+            <div class="detail-key">チェックアウト完了</div>
+            <div class="detail-val">7室（清掃待ち：2室）</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-key">優先清掃</div>
+            <div class="detail-val">302・501号室</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-key">アーリーチェックイン</div>
+            <div class="detail-val">105号室（15:00希望）</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-key">特別対応</div>
+            <div class="detail-val">620室：禁煙対応確認</div>
+          </div>
+          <div style="margin-top:16px;">
+            <button class="action-btn primary" style="width:100%;" onclick="showToast('清掃チームLINEに送信しました ✓')">
+              LINEで清掃チームに送信
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.innerHTML = '✓　' + msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Nav interaction
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', function() {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    this.classList.add('active');
+    showToast(this.textContent.trim() + ' を開きました');
+  });
+});
+
+// Filter tabs
+document.querySelectorAll('.filter-tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

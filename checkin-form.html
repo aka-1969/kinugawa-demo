@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>事前チェックイン｜鬼怒川パークホテルズ</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Noto+Serif+JP:wght@300;400&display=swap');
+
+:root {
+  --gold: #c9a84c;
+  --gold-dim: rgba(201,168,76,0.12);
+  --gold-border: rgba(201,168,76,0.3);
+  --bg: #0b1118;
+  --surface: rgba(255,255,255,0.035);
+  --border: rgba(255,255,255,0.08);
+  --text: #e8e0d0;
+  --text-dim: #8a7e6a;
+  --green: #4a9c6e;
+  --red: #c05050;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Serif JP', serif;
+  min-height: 100vh;
+}
+
+/* Background texture */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(201,168,76,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, rgba(100,140,180,0.03) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* Header */
+.header {
+  border-bottom: 1px solid var(--gold-border);
+  padding: 28px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(90deg, rgba(201,168,76,0.07) 0%, transparent 100%);
+}
+.hotel-name-en {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 11px;
+  letter-spacing: 5px;
+  color: var(--gold);
+  margin-bottom: 5px;
+}
+.hotel-name-ja {
+  font-size: 18px;
+  font-weight: 300;
+  letter-spacing: 3px;
+  color: #f0e8d8;
+}
+.header-badge {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--gold);
+  border: 1px solid var(--gold-border);
+  padding: 6px 14px;
+  border-radius: 2px;
+  font-family: sans-serif;
+}
+
+/* Progress bar */
+.progress-wrap {
+  padding: 24px 40px 0;
+  max-width: 680px;
+  margin: 0 auto;
+}
+.progress-steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 32px;
+}
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+}
+.step::after {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  width: 100%;
+  height: 1px;
+  background: var(--border);
+}
+.step:last-child::after { display: none; }
+.step-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: sans-serif;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s;
+}
+.step.active .step-circle {
+  border-color: var(--gold);
+  background: var(--gold-dim);
+  color: var(--gold);
+}
+.step.done .step-circle {
+  border-color: var(--green);
+  background: rgba(74,156,110,0.15);
+  color: var(--green);
+}
+.step-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 6px;
+  letter-spacing: 1px;
+  font-family: sans-serif;
+  white-space: nowrap;
+}
+.step.active .step-label { color: var(--gold); }
+
+/* Main content */
+.main {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 40px 60px;
+}
+
+/* Reservation card */
+.reservation-card {
+  background: var(--gold-dim);
+  border: 1px solid var(--gold-border);
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin-bottom: 32px;
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.res-item { flex: 1; min-width: 140px; }
+.res-label {
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--gold);
+  margin-bottom: 5px;
+  font-family: sans-serif;
+}
+.res-value {
+  font-size: 14px;
+  color: #f0e8d8;
+  font-weight: 300;
+}
+
+/* Section */
+.section {
+  margin-bottom: 36px;
+}
+.section-title {
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: var(--gold);
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  font-family: sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-title::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  background: var(--gold);
+  border-radius: 2px;
+}
+
+/* Form elements */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.form-grid.single { grid-template-columns: 1fr; }
+
+.field { display: flex; flex-direction: column; gap: 8px; }
+.field label {
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+  font-family: sans-serif;
+}
+.field label .required {
+  color: var(--gold);
+  margin-left: 4px;
+}
+.field input, .field select, .field textarea {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 11px 14px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: 'Noto Serif JP', serif;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: rgba(201,168,76,0.5);
+}
+.field select option { background: #1a2530; }
+.field textarea { min-height: 80px; resize: vertical; }
+
+/* Allergy section */
+.allergy-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.allergy-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+.allergy-item input { display: none; }
+.allergy-item:has(input:checked) {
+  background: rgba(192,80,80,0.12);
+  border-color: rgba(192,80,80,0.5);
+}
+.allergy-icon { font-size: 22px; }
+.allergy-name {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: sans-serif;
+  text-align: center;
+}
+.allergy-item:has(input:checked) .allergy-name { color: #e07070; }
+
+/* Time selector */
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.time-btn {
+  padding: 10px 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-size: 12px;
+  font-family: sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.time-btn.selected {
+  background: var(--gold-dim);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* Radio group */
+.radio-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.radio-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 13px;
+  font-family: sans-serif;
+  user-select: none;
+}
+.radio-item input { display: none; }
+.radio-item:has(input:checked) {
+  background: var(--gold-dim);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* Submit button */
+.submit-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(90deg, var(--gold), #e8c56a);
+  border: none;
+  border-radius: 8px;
+  color: #0b1118;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  cursor: pointer;
+  font-family: sans-serif;
+  transition: all 0.3s;
+  margin-top: 8px;
+}
+.submit-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+/* Note */
+.note {
+  margin-top: 20px;
+  padding: 14px 18px;
+  background: var(--surface);
+  border-left: 2px solid var(--gold-border);
+  border-radius: 0 6px 6px 0;
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.8;
+  font-family: sans-serif;
+}
+
+/* Success screen */
+.success-screen {
+  display: none;
+  text-align: center;
+  padding: 60px 20px;
+}
+.success-screen.show { display: block; }
+.success-icon {
+  font-size: 56px;
+  margin-bottom: 24px;
+}
+.success-title {
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: 3px;
+  color: #f0e8d8;
+  margin-bottom: 12px;
+}
+.success-sub {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.8;
+  font-family: sans-serif;
+  margin-bottom: 32px;
+}
+.summary-card {
+  background: var(--gold-dim);
+  border: 1px solid var(--gold-border);
+  border-radius: 8px;
+  padding: 24px;
+  text-align: left;
+  max-width: 440px;
+  margin: 0 auto;
+}
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  gap: 16px;
+}
+.summary-row:last-child { border-bottom: none; }
+.summary-key {
+  color: var(--text-dim);
+  font-family: sans-serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+.summary-val { color: var(--text); text-align: right; }
+
+/* Form hide */
+.form-content { }
+.form-content.hide { display: none; }
+
+@media (max-width: 600px) {
+  .header { padding: 20px; }
+  .progress-wrap, .main { padding-left: 20px; padding-right: 20px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .allergy-grid { grid-template-columns: repeat(3, 1fr); }
+  .time-grid { grid-template-columns: repeat(3, 1fr); }
+  .reservation-card { gap: 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div>
+    <div class="hotel-name-en">KINUGAWA PARK HOTELS</div>
+    <div class="hotel-name-ja">事前チェックインフォーム</div>
+  </div>
+  <div class="header-badge">PRE CHECK-IN</div>
+</div>
+
+<!-- Progress -->
+<div class="progress-wrap">
+  <div class="progress-steps">
+    <div class="step active" id="step1">
+      <div class="step-circle">1</div>
+      <div class="step-label">基本情報</div>
+    </div>
+    <div class="step" id="step2">
+      <div class="step-circle">2</div>
+      <div class="step-label">食事・アレルギー</div>
+    </div>
+    <div class="step" id="step3">
+      <div class="step-circle">3</div>
+      <div class="step-label">到着情報</div>
+    </div>
+    <div class="step" id="step4">
+      <div class="step-circle">4</div>
+      <div class="step-label">確認・送信</div>
+    </div>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Form Content -->
+  <div class="form-content" id="formContent">
+
+    <!-- Reservation Info -->
+    <div class="reservation-card">
+      <div class="res-item">
+        <div class="res-label">予約番号</div>
+        <div class="res-value">KPH-2026-04831</div>
+      </div>
+      <div class="res-item">
+        <div class="res-label">チェックイン</div>
+        <div class="res-value">4月10日（木）</div>
+      </div>
+      <div class="res-item">
+        <div class="res-label">チェックアウト</div>
+        <div class="res-value">4月11日（金）</div>
+      </div>
+      <div class="res-item">
+        <div class="res-label">プラン</div>
+        <div class="res-value">鬼怒川会席プラン</div>
+      </div>
+    </div>
+
+    <!-- Section 1: 基本情報 -->
+    <div class="section" id="sec1">
+      <div class="section-title">GUEST INFORMATION　代表者情報</div>
+      <div class="form-grid" style="margin-bottom:16px;">
+        <div class="field">
+          <label>お名前（漢字）<span class="required">*</span></label>
+          <input type="text" placeholder="例：山田 太郎" id="name_kanji">
+        </div>
+        <div class="field">
+          <label>お名前（ふりがな）<span class="required">*</span></label>
+          <input type="text" placeholder="例：やまだ たろう" id="name_kana">
+        </div>
+      </div>
+      <div class="form-grid" style="margin-bottom:16px;">
+        <div class="field">
+          <label>ご住所<span class="required">*</span></label>
+          <input type="text" placeholder="都道府県から入力" id="address">
+        </div>
+        <div class="field">
+          <label>電話番号<span class="required">*</span></label>
+          <input type="tel" placeholder="090-0000-0000" id="phone">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>ご宿泊人数</label>
+          <select id="guests">
+            <option>1名</option>
+            <option selected>2名</option>
+            <option>3名</option>
+            <option>4名</option>
+            <option>5名以上</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>お子様の同伴</label>
+          <select id="children">
+            <option selected>なし</option>
+            <option>あり（3歳未満）</option>
+            <option>あり（3〜6歳）</option>
+            <option>あり（小学生）</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: 食事・アレルギー -->
+    <div class="section" id="sec2">
+      <div class="section-title">DINING & ALLERGY　食事・アレルギー情報</div>
+
+      <div style="margin-bottom:16px;">
+        <div class="field" style="margin-bottom:8px;">
+          <label>アレルギーのある食材（該当するものを選択）</label>
+        </div>
+        <div class="allergy-grid">
+          <label class="allergy-item">
+            <input type="checkbox" name="allergy" value="卵">
+            <div class="allergy-icon">🥚</div>
+            <div class="allergy-name">卵</div>
+          </label>
+          <label class="allergy-item">
+            <input type="checkbox" name="allergy" value="乳製品">
+            <div class="allergy-icon">🥛</div>
+            <div class="allergy-name">乳製品</div>
+          </label>
+          <label class="allergy-item">
+            <input type="checkbox" name="allergy" value="小麦">
+            <div class="allergy-icon">🌾</div>
+            <div class="allergy-name">小麦</div>
+          </label>
+          <label class="allergy-item">
+            <input type="checkbox" name="allergy" value="海鮮">
+            <div class="allergy-icon">🦐</div>
+            <div class="allergy-name">海鮮類</div>
+          </label>
+          <label class="allergy-item">
+            <input type="checkbox" name="allergy" value="ナッツ">
+            <div class="allergy-icon">🥜</div>
+            <div class="allergy-name">ナッツ類</div>
+          </label>
+          <label class="allergy-item">
+            <input type="checkbox" name="allergy" value="そば">
+            <div class="allergy-icon">🍜</div>
+            <div class="allergy-name">そば</div>
+          </label>
+          <label class="allergy-item">
+            <input type="checkbox" name="allergy" value="肉類">
+            <div class="allergy-icon">🥩</div>
+            <div class="allergy-name">肉類</div>
+          </label>
+          <label class="allergy-item">
+            <input type="checkbox" name="allergy" value="その他">
+            <div class="allergy-icon">⚠️</div>
+            <div class="allergy-name">その他</div>
+          </label>
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom:16px;">
+        <label>食事に関するご要望・詳細（自由記述）</label>
+        <textarea placeholder="アレルギーの詳細、食事制限、ベジタリアン・ヴィーガン対応の希望など" id="dining_note"></textarea>
+      </div>
+
+      <div class="field">
+        <label>夕食のご希望時間</label>
+        <div class="time-grid" style="margin-top:4px;">
+          <div class="time-btn" onclick="selectTime(this)">17:30</div>
+          <div class="time-btn selected" onclick="selectTime(this)">18:00</div>
+          <div class="time-btn" onclick="selectTime(this)">18:30</div>
+          <div class="time-btn" onclick="selectTime(this)">19:00</div>
+          <div class="time-btn" onclick="selectTime(this)">19:30</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: 到着情報 -->
+    <div class="section" id="sec3">
+      <div class="section-title">ARRIVAL INFO　到着・駐車場情報</div>
+
+      <div class="field" style="margin-bottom:16px;">
+        <label>ご到着予定時刻<span class="required">*</span></label>
+        <div class="time-grid" style="margin-top:4px;">
+          <div class="time-btn" onclick="selectArrival(this)">15:00</div>
+          <div class="time-btn" onclick="selectArrival(this)">16:00</div>
+          <div class="time-btn selected" onclick="selectArrival(this)">17:00</div>
+          <div class="time-btn" onclick="selectArrival(this)">18:00</div>
+          <div class="time-btn" onclick="selectArrival(this)">19:00以降</div>
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom:16px;">
+        <label>お車でのご来館</label>
+        <div class="radio-group" style="margin-top:4px;">
+          <label class="radio-item">
+            <input type="radio" name="car" value="あり" checked>あり（駐車場ご利用）
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="car" value="なし">なし（公共交通機関）
+          </label>
+        </div>
+      </div>
+
+      <div class="form-grid" id="car_fields">
+        <div class="field">
+          <label>車のナンバー</label>
+          <input type="text" placeholder="例：宇都宮 500 あ 1234" id="car_number">
+        </div>
+        <div class="field">
+          <label>車種・色（任意）</label>
+          <input type="text" placeholder="例：白いセダン" id="car_type">
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:16px;">
+        <label>その他ご要望・ご連絡事項</label>
+        <textarea placeholder="記念日のお祝い、部屋の希望、その他何でもご記入ください" id="other_note"></textarea>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="note">
+      ※ 入力内容はフロントスタッフおよび関連部署（調理・清掃）と共有されます。<br>
+      ※ アレルギー情報は必ず3日前までにご連絡ください。当日のご申告は対応できない場合がございます。
+    </div>
+
+    <button class="submit-btn" onclick="submitForm()" style="margin-top:24px;">
+      ✦　送信して事前チェックインを完了する
+    </button>
+
+  </div>
+
+  <!-- Success Screen -->
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon">✦</div>
+    <div class="success-title">事前チェックイン完了</div>
+    <div class="success-sub">
+      ご登録ありがとうございます。<br>
+      フロントスタッフが内容を確認し、準備を整えてお待ちしております。<br>
+      当日はお名前をお伝えいただくだけでスムーズにご案内できます。
+    </div>
+    <div class="summary-card">
+      <div class="summary-row">
+        <div class="summary-key">お名前</div>
+        <div class="summary-val" id="conf_name">—</div>
+      </div>
+      <div class="summary-row">
+        <div class="summary-key">チェックイン</div>
+        <div class="summary-val">4月10日（木）<span id="conf_arrival">17:00</span>頃</div>
+      </div>
+      <div class="summary-row">
+        <div class="summary-key">夕食</div>
+        <div class="summary-val"><span id="conf_dinner">18:00</span>〜</div>
+      </div>
+      <div class="summary-row">
+        <div class="summary-key">アレルギー</div>
+        <div class="summary-val" id="conf_allergy">なし</div>
+      </div>
+      <div class="summary-row">
+        <div class="summary-key">お車</div>
+        <div class="summary-val" id="conf_car">—</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function selectTime(el) {
+  el.parentElement.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function selectArrival(el) {
+  el.parentElement.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// Progress update on scroll / interaction
+function updateProgress(step) {
+  for(let i = 1; i <= 4; i++) {
+    const s = document.getElementById('step'+i);
+    s.className = 'step';
+    if(i < step) s.classList.add('done');
+    else if(i === step) s.classList.add('active');
+  }
+}
+
+// Detect scroll to update progress
+const sections = ['sec1','sec2','sec3'];
+window.addEventListener('scroll', () => {
+  const scrollY = window.scrollY + window.innerHeight * 0.4;
+  let current = 1;
+  sections.forEach((id, i) => {
+    const el = document.getElementById(id);
+    if(el && el.offsetTop < scrollY) current = i + 2;
+  });
+  updateProgress(Math.min(current, 3));
+});
+
+function submitForm() {
+  // Gather data
+  const name = document.getElementById('name_kanji').value || '山田 太郎';
+  const allergies = [...document.querySelectorAll('input[name="allergy"]:checked')].map(el => el.value);
+  const dinner = document.querySelector('.time-btn.selected')?.textContent || '18:00';
+  const arrival = document.querySelectorAll('.time-btn.selected')[1]?.textContent || '17:00';
+  const car = document.querySelector('input[name="car"]:checked')?.value || 'なし';
+  const carNum = document.getElementById('car_number').value;
+
+  // Update confirmation
+  document.getElementById('conf_name').textContent = name;
+  document.getElementById('conf_dinner').textContent = dinner;
+  document.getElementById('conf_arrival').textContent = arrival;
+  document.getElementById('conf_allergy').textContent = allergies.length ? allergies.join('・') : 'なし';
+  document.getElementById('conf_car').textContent = car === 'あり' && carNum ? carNum : car;
+
+  // Show success
+  document.getElementById('formContent').classList.add('hide');
+  document.getElementById('successScreen').classList.add('show');
+  updateProgress(4);
+  document.querySelector('.step:last-child .step-circle').textContent = '✓';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>
